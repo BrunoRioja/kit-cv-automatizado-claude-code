@@ -5,7 +5,7 @@ Uso:
 
 Pestaña "Analizadas": filas con análisis de la skill (recomendacion llena).
 Pestaña "Resto": las demás filas, con la calificación rápida y el link.
-Las marcas del usuario (Postulé / Analizar) viven en la base de datos del artefacto, no aquí.
+Las marcas del usuario (Postular / Analizar) viven en la base de datos del artefacto, no aquí.
 """
 
 import html

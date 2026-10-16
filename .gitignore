@@ -16,3 +16,6 @@
 __pycache__/
 *.pyc
 .venv/
+
+# Video de /brag (se publica aparte si se quiere)
+brag-output/

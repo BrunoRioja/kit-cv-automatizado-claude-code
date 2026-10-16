@@ -159,7 +159,7 @@ summary { cursor: pointer; font-weight: 600; }
   <header class="top">
     <div>
       <h1>Radar de vacantes</h1>
-      <p class="sub">Vacantes de los portales de BBVA, Interbank, Scotiabank, Mibanco, Telefónica, Alicorp, Belcorp, Arca Continental y Nestlé, de Bumeran (últimos 30 días) y las que pegas en el chat. Marca <b>Postulé</b> en las analizadas que envíes, o <b>Analizar</b> en las del resto que quieras revisar a fondo, y avísale a Claude.</p>
+      <p class="sub">Vacantes de los portales de BBVA, Interbank, Scotiabank, Mibanco, Telefónica, Alicorp, Belcorp, Arca Continental y Nestlé, de Bumeran (últimos 30 días) y las que pegas en el chat. Marca <b>Postular</b> en las analizadas a las que quieras postular (Claude genera su CV), o <b>Analizar</b> en las del resto que quieras revisar a fondo, y avísale a Claude.</p>
     </div>
     <div class="legend" aria-label="Leyenda de recomendación">
       <span class="pill go">Postular</span><span class="pill care">Postular con cautela</span><span class="pill stop">Evitar</span>
@@ -214,7 +214,7 @@ function estadoHtml() {
   const p = A.filter(d => marcas.get(d.id) === true && !generados.has(d.id)).length;
   const g = A.filter(d => generados.has(d.id)).length;
   const s = R.filter(d => solicitudes.get(d.id) === true).length;
-  return `<div class="status"><b>${p}</b> postulada${p === 1 ? "" : "s"} sin CV · <b>${g}</b> con CV generado · <b>${s}</b> pedida${s === 1 ? "" : "s"} para analizar.
+  return `<div class="status"><b>${p}</b> por postular sin CV · <b>${g}</b> con CV generado · <b>${s}</b> pedida${s === 1 ? "" : "s"} para analizar.
     <span class="note">Dile a Claude "revisa a qué puestos voy a postular" o "analiza las que marqué".</span></div>`;
 }
 
@@ -223,7 +223,7 @@ function casilla(d, ctx) {
   if (g) return `<label class="mark done" title="CV generado y congelado"><input type="checkbox" checked disabled id="mk-${ctx}-${d.id}"><span>CV ${esc(g.cv_id || "")}</span></label>`;
   const on = marcas.get(d.id) === true, off = dbEstado !== "ok" || guardando.has(d.id);
   return `<label class="mark ${on ? "on" : ""} ${off ? "off" : ""}" for="mk-${ctx}-${d.id}">
-    <input type="checkbox" id="mk-${ctx}-${d.id}" data-col="marcas" data-campo="postular" data-id="${d.id}" ${on ? "checked" : ""} ${off ? "disabled" : ""}><span>Postulé</span></label>`;
+    <input type="checkbox" id="mk-${ctx}-${d.id}" data-col="marcas" data-campo="postular" data-id="${d.id}" ${on ? "checked" : ""} ${off ? "disabled" : ""}><span>Postular</span></label>`;
 }
 
 function score(lbl, v) {

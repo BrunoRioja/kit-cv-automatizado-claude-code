@@ -39,7 +39,7 @@ Si algo no te gusta ("no menciones la IA si la vacante no la pide", "ese bullet 
                  skill analizar-vacante-cv: empresa · puesto · encaje · sueldo · traslado
                               │
                               ▼
-          radar/ (página con las vacantes analizadas; marcas "Postulé" / "Analizar")
+          radar/ (página con las vacantes analizadas; marcas "Postular" / "Analizar")
                               │  tú decides
                               ▼
    cv_data.xlsx + experiencia_maestra.md ──► generar_cv.py ──► salida/CV.docx + .pdf
