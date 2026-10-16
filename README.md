@@ -84,7 +84,7 @@ Todo lo que refleja *mis* preferencias está separado para que lo cambies:
 |---|---|---|
 | Cómo evaluar empresas | `CLAUDE.md` → "Mis criterios" | Pesa mucho cómo trata a sus empleados (SUNAFIL, reseñas, Merco/GPTW) y si tiene denuncias ambientales (OEFA) |
 | Brechas que pesan poco | `CLAUDE.md` → "Mis criterios" | SQL resta máximo 5 puntos porque se aprende rápido |
-| Qué nunca va en el CV | `CLAUDE.md` → "Mis criterios" | Sin referencias ni nivel de inglés; IA solo si la vacante la pide |
+| Qué nunca va en el CV | `CLAUDE.md` → "Mis criterios" | Sin referencias; IA solo si la vacante la pide |
 | Puestos que busco | `PALABRAS_CLAVE` en `buscar_vacantes.py` | Datos/BI, comercial, producto |
 | Ciudades | `UBICACIONES` en `buscar_vacantes.py` | Lima, Callao, Chiclayo o remoto |
 | Títulos que descarto | `EXCLUIR_TITULO` en `buscar_vacantes.py` | Gerencias, jefaturas, prácticas |
