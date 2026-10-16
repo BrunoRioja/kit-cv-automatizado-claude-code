@@ -1,5 +1,7 @@
 # Kit de CVs con Claude Code
 
+https://github.com/user-attachments/assets/9d8136d9-d626-4b39-9a1a-821beb85d8a0
+
 Un sistema para buscar trabajo con [Claude Code](https://claude.com/claude-code) como copiloto. Busca vacantes en los portales de las empresas que te interesan, las califica contra tu experiencia real, investiga a la empresa y genera un CV de una página distinto para cada postulación, sin inventar nada.
 
 El código lo escribí junto con Claude Code, y está pensado para usarse de la misma forma: **tú conversas, Claude ejecuta los scripts y tú decides a qué postular**.
