@@ -54,8 +54,8 @@ Si algo no te gusta ("no menciones la IA si la vacante no la pide", "ese bullet 
 ## Empezar
 
 ```bash
-git clone <este-repo>
-cd kit-cv-claude-code
+git clone https://github.com/BrunoRioja/kit-cv-automatizado-claude-code.git
+cd kit-cv-automatizado-claude-code
 pip install -r requirements.txt
 
 # Prueba con el perfil ficticio:
