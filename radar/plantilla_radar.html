@@ -1,0 +1,372 @@
+<title>Radar de vacantes</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Familjen+Grotesk:wght@500;600;700&family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@500&display=swap">
+<style>
+/* Layout: lista de vacantes (podio) a la izquierda, expediente de la vacante elegida a la derecha; en teléfono se apilan. */
+:root {
+  --bg: #f3f5f7;
+  --surface: #ffffff;
+  --ink: #17202b;
+  --muted: #5b6676;
+  --line: #d9dfe6;
+  --accent: #1f4fd1;
+  --accent-soft: #e4ebfd;
+  --go: #12784a;      --go-soft: #dcf2e6;
+  --care: #a35f00;    --care-soft: #fbecd2;
+  --stop: #b3261e;    --stop-soft: #fadedb;
+  --font-display: "Familjen Grotesk", "Segoe UI", system-ui, sans-serif;
+  --font-body: "IBM Plex Sans", "Segoe UI", system-ui, sans-serif;
+  --font-data: "IBM Plex Mono", ui-monospace, Consolas, monospace;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --bg: #0f141b; --surface: #171e27; --ink: #e6ebf1; --muted: #98a3b3; --line: #2a3441;
+    --accent: #7d9cff; --accent-soft: #1d2a4d;
+    --go: #5fd39a; --go-soft: #133325; --care: #f0b25a; --care-soft: #3a2a10; --stop: #ff8a80; --stop-soft: #3d1a17;
+    color-scheme: dark;
+  }
+}
+:root[data-theme="dark"] {
+  --bg: #0f141b; --surface: #171e27; --ink: #e6ebf1; --muted: #98a3b3; --line: #2a3441;
+  --accent: #7d9cff; --accent-soft: #1d2a4d;
+  --go: #5fd39a; --go-soft: #133325; --care: #f0b25a; --care-soft: #3a2a10; --stop: #ff8a80; --stop-soft: #3d1a17;
+  color-scheme: dark;
+}
+* { box-sizing: border-box; }
+body { background: var(--bg); color: var(--ink); font: 15px/1.55 var(--font-body); }
+.wrap { max-width: 1240px; margin: 0 auto; padding-inline: 16px; padding-block: 28px 48px; display: grid; gap: 20px; }
+header.top { display: flex; flex-wrap: wrap; align-items: end; justify-content: space-between; gap: 12px; }
+h1 { font: 700 clamp(1.6rem, 3vw, 2.2rem)/1.1 var(--font-display); margin: 0; letter-spacing: -0.01em; text-wrap: balance; }
+.sub { color: var(--muted); margin: 6px 0 0; max-width: 70ch; }
+.legend { display: flex; flex-wrap: wrap; gap: 8px; font-size: 13px; color: var(--muted); }
+/* Cada panel tiene su propia barra de desplazamiento: la página no se mueve y el puesto elegido siempre queda a la vista. */
+:root { --panel-h: calc(100dvh - 32px); }
+.grid { display: grid; grid-template-columns: minmax(280px, 360px) minmax(0, 1fr); gap: 20px; align-items: start; }
+.grid > .pane { position: sticky; top: calc(env(safe-area-inset-top, 0px) + 16px); }
+.pane { max-height: var(--panel-h); min-height: 320px; overflow-y: auto; overscroll-behavior: contain; scrollbar-width: thin; scrollbar-color: var(--line) transparent; }
+@media (max-width: 820px) {
+  .grid { grid-template-columns: minmax(0, 1fr); }
+  .grid > .pane { position: static; }
+  .list.pane { max-height: 45vh; min-height: 0; }
+  .file.pane { max-height: none; min-height: 0; overflow: visible; }
+}
+
+/* Lista */
+.list { display: grid; gap: 8px; align-content: start; padding-right: 4px; }
+.item { display: grid; grid-template-columns: 34px minmax(0, 1fr) auto; gap: 10px; align-items: center; width: 100%;
+  text-align: left; background: var(--surface); border: 1px solid var(--line); border-radius: 10px; padding: 10px 12px;
+  color: inherit; font: inherit; cursor: pointer; }
+.item:hover { border-color: var(--accent); }
+.item:focus-visible, button:focus-visible, a:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+.item[aria-current="true"] { border-color: var(--accent); background: var(--accent-soft); }
+.rank { font: 600 1.1rem var(--font-data); color: var(--muted); text-align: center; font-variant-numeric: tabular-nums; }
+.item[aria-current="true"] .rank { color: var(--accent); }
+.it-title { font-weight: 600; font-size: 14px; line-height: 1.3; overflow-wrap: anywhere; }
+.it-co { font-size: 13px; color: var(--muted); overflow-wrap: anywhere; }
+.it-score { font: 500 1rem var(--font-data); font-variant-numeric: tabular-nums; text-align: right; }
+.it-score small { display: block; font: 500 10px var(--font-body); text-transform: uppercase; letter-spacing: .06em; color: var(--muted); }
+.star { color: var(--accent); font-size: 12px; margin-left: 4px; }
+
+/* Pills */
+.pill { display: inline-flex; align-items: center; gap: 6px; font-size: 12px; font-weight: 600; padding: 3px 10px; border-radius: 999px; white-space: nowrap; }
+.pill::before { content: ""; width: 7px; height: 7px; border-radius: 50%; background: currentColor; }
+.pill.go { color: var(--go); background: var(--go-soft); }
+.pill.care { color: var(--care); background: var(--care-soft); }
+.pill.stop { color: var(--stop); background: var(--stop-soft); }
+.chip { font-size: 12px; color: var(--muted); border: 1px solid var(--line); border-radius: 6px; padding: 2px 8px; white-space: nowrap; }
+
+/* Expediente */
+.file { background: var(--surface); border: 1px solid var(--line); border-radius: 14px; padding: clamp(16px, 3vw, 28px); display: grid; gap: 22px; min-width: 0; align-content: start; }
+.eyebrow { font-size: 12px; text-transform: uppercase; letter-spacing: .08em; color: var(--muted); }
+.file h2 { font: 700 clamp(1.3rem, 2.4vw, 1.75rem)/1.15 var(--font-display); margin: 4px 0 6px; text-wrap: balance; overflow-wrap: anywhere; }
+.co { color: var(--muted); }
+.meta { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 10px; }
+.verdict { display: grid; grid-template-columns: auto minmax(0, 1fr); gap: 18px; align-items: center; padding: 16px; border-radius: 12px; background: var(--bg); }
+@media (max-width: 520px) { .verdict { grid-template-columns: minmax(0, 1fr); } }
+.big { font: 700 2.6rem/1 var(--font-display); font-variant-numeric: tabular-nums; }
+.big small { font: 500 1rem var(--font-data); color: var(--muted); }
+.verdict p { margin: 6px 0 0; max-width: 70ch; }
+.scores { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 10px; }
+@media (max-width: 560px) { .scores { grid-template-columns: minmax(0, 1fr); } }
+.score { border: 1px solid var(--line); border-radius: 10px; padding: 10px 12px; display: grid; gap: 6px; }
+.score .lbl { font-size: 12px; text-transform: uppercase; letter-spacing: .06em; color: var(--muted); }
+.score .val { font: 500 1.15rem var(--font-data); font-variant-numeric: tabular-nums; }
+.bar { height: 6px; border-radius: 3px; background: var(--line); overflow: hidden; }
+.bar span { display: block; height: 100%; background: var(--accent); }
+.sec { display: grid; gap: 6px; }
+.sec h3 { font: 600 1.05rem var(--font-display); margin: 0; display: flex; justify-content: space-between; gap: 10px; align-items: baseline; }
+.sec h3 .n { font: 500 13px var(--font-data); color: var(--muted); }
+.sec p { margin: 0; max-width: 72ch; }
+.salary { font: 600 1.15rem var(--font-display); }
+.sources { margin: 0; padding-left: 18px; display: grid; gap: 4px; font-size: 14px; }
+a { color: var(--accent); }
+details { border-top: 1px solid var(--line); padding-top: 14px; }
+summary { cursor: pointer; font-weight: 600; }
+.raw { margin: 10px 0 0; color: var(--muted); max-width: 80ch; font-size: 14px; white-space: pre-wrap; overflow-wrap: anywhere; }
+.actions { display: flex; flex-wrap: wrap; gap: 10px; align-items: center; }
+.btn { font: 600 14px var(--font-body); border-radius: 8px; padding: 8px 14px; border: 1px solid var(--line); background: var(--surface); color: var(--ink); cursor: pointer; text-decoration: none; }
+.btn.primary { background: var(--accent); border-color: var(--accent); color: var(--surface); }
+.btn[aria-pressed="true"] { background: var(--go-soft); border-color: var(--go); color: var(--go); }
+.note { font-size: 13px; color: var(--muted); }
+.shortlist { background: var(--surface); border: 1px dashed var(--line); border-radius: 10px; padding: 12px; display: grid; gap: 8px; font-size: 13px; }
+.shortlist strong { font-size: 13px; }
+.row { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 6px; align-items: stretch; }
+.mark { display: grid; place-items: center; gap: 2px; min-width: 64px; padding: 6px; border: 1px solid var(--line); border-radius: 10px;
+  background: var(--surface); font-size: 11px; color: var(--muted); cursor: pointer; text-align: center; overflow-wrap: anywhere; }
+.mark input { width: 18px; height: 18px; accent-color: var(--go); cursor: pointer; margin: 0; }
+.mark.on { border-color: var(--go); background: var(--go-soft); color: var(--go); font-weight: 600; }
+.mark.done { border-color: var(--accent); background: var(--accent-soft); color: var(--accent); font-weight: 600; cursor: default; }
+.mark.done input { cursor: default; }
+.mark.off { opacity: .55; cursor: not-allowed; }
+.status { font-size: 13px; padding: 10px 12px; border-radius: 10px; background: var(--surface); border: 1px solid var(--line); }
+.status.warn { color: var(--care); background: var(--care-soft); border-color: transparent; }
+.bullets { font: 500 13px var(--font-data); color: var(--muted); overflow-wrap: anywhere; }
+.badge-done { display: inline-flex; gap: 6px; align-items: center; font-size: 13px; font-weight: 600; color: var(--accent); background: var(--accent-soft); padding: 6px 12px; border-radius: 8px; }
+@media (prefers-reduced-motion: no-preference) { .bar span { transition: width .4s ease; } }
+.tabs { display: flex; flex-wrap: wrap; gap: 6px; border-bottom: 1px solid var(--line); }
+.tab { font: 600 14px var(--font-body); padding: 10px 14px; border: 0; border-bottom: 2px solid transparent; background: none; color: var(--muted); cursor: pointer; }
+.tab[aria-selected="true"] { color: var(--ink); border-bottom-color: var(--accent); }
+.tab .count { font: 500 12px var(--font-data); margin-left: 6px; color: var(--muted); }
+.tools { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; }
+.tools input[type="search"] { flex: 1 1 220px; min-width: 0; font: inherit; padding: 8px 12px; border-radius: 8px; border: 1px solid var(--line); background: var(--surface); color: var(--ink); }
+.filtros { display: flex; flex-wrap: wrap; gap: 6px; }
+.filter { font: 600 13px var(--font-body); padding: 6px 12px; border-radius: 999px; border: 1px solid var(--line); background: var(--surface); color: var(--muted); cursor: pointer; }
+.filter[aria-pressed="true"] { border-color: var(--accent); color: var(--accent); background: var(--accent-soft); }
+.cards { display: grid; gap: 10px; }
+.card { background: var(--surface); border: 1px solid var(--line); border-radius: 12px; padding: 14px 16px; display: grid; gap: 8px; min-width: 0; }
+.card.pedida { border-color: var(--accent); }
+.card-head { display: grid; grid-template-columns: auto minmax(0, 1fr) auto; gap: 12px; align-items: start; }
+.grp { font: 600 12px var(--font-data); padding: 4px 8px; border-radius: 6px; background: var(--bg); color: var(--muted); white-space: nowrap; }
+.card h4 { margin: 0; font: 600 15px/1.3 var(--font-display); overflow-wrap: anywhere; }
+.card .co { font-size: 13px; }
+.enc { font: 500 1.05rem var(--font-data); font-variant-numeric: tabular-nums; text-align: right; }
+.enc small { display: block; font: 500 10px var(--font-body); letter-spacing: .06em; text-transform: uppercase; color: var(--muted); }
+.facts { display: grid; gap: 3px; font-size: 13px; margin: 0; }
+.facts div { display: grid; grid-template-columns: 62px minmax(0, 1fr); gap: 8px; }
+.facts dt { color: var(--muted); font-weight: 600; }
+.facts dd { margin: 0; overflow-wrap: anywhere; }
+.card-actions { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; }
+.ask { display: inline-flex; align-items: center; gap: 8px; font-size: 13px; font-weight: 600; padding: 6px 12px; border: 1px solid var(--line); border-radius: 8px; cursor: pointer; }
+.ask input { width: 16px; height: 16px; accent-color: var(--accent); margin: 0; cursor: pointer; }
+.ask.on { border-color: var(--accent); color: var(--accent); background: var(--accent-soft); }
+.ask.off { opacity: .55; cursor: not-allowed; }
+.empty { padding: 24px; text-align: center; color: var(--muted); background: var(--surface); border: 1px dashed var(--line); border-radius: 12px; }
+@media (max-width: 520px) { .card-head { grid-template-columns: minmax(0, 1fr) auto; } .card-head .grp { grid-column: 1 / -1; justify-self: start; } }
+</style>
+
+<div class="wrap">
+  <header class="top">
+    <div>
+      <h1>Radar de vacantes</h1>
+      <p class="sub">Vacantes de los portales de BBVA, Interbank, Scotiabank, Mibanco, Telefónica, Alicorp, Belcorp, Arca Continental y Nestlé, de Bumeran (últimos 30 días) y las que pegas en el chat. Marca <b>Postulé</b> en las analizadas que envíes, o <b>Analizar</b> en las del resto que quieras revisar a fondo, y avísale a Claude.</p>
+    </div>
+    <div class="legend" aria-label="Leyenda de recomendación">
+      <span class="pill go">Postular</span><span class="pill care">Postular con cautela</span><span class="pill stop">Evitar</span>
+    </div>
+  </header>
+
+  <div class="tabs" role="tablist">
+    <button class="tab" role="tab" id="tab-a" aria-controls="panel-a" type="button">Analizadas<span class="count" id="count-a"></span></button>
+    <button class="tab" role="tab" id="tab-r" aria-controls="panel-r" type="button">Resto sin analizar<span class="count" id="count-r"></span></button>
+  </div>
+  <div id="estado"></div>
+
+  <section id="panel-a" role="tabpanel" aria-labelledby="tab-a">
+    <div class="grid">
+      <nav class="list pane" id="list" aria-label="Vacantes analizadas"></nav>
+      <main class="file pane" id="file" aria-live="polite"></main>
+    </div>
+  </section>
+
+  <section id="panel-r" role="tabpanel" aria-labelledby="tab-r" hidden>
+    <div class="cards">
+      <div class="tools">
+        <input type="search" id="buscar" placeholder="Buscar por puesto, empresa o distrito" aria-label="Buscar en el resto">
+        <div class="filtros" id="filtros"></div>
+      </div>
+      <div class="cards" id="resto"></div>
+    </div>
+  </section>
+</div>
+
+<script>
+const DATA = __DATA__;
+const A = DATA.analizadas, R = DATA.resto;
+// Base de datos del artefacto (capability db):
+//   marcas/<id>      -> esta página: { postular: bool, actualizado }   (pestaña Analizadas)
+//   solicitudes/<id> -> esta página: { analizar: bool, actualizado }   (pestaña Resto)
+//   generados/<id>   -> Claude, al generar y congelar el CV: { cv_id, fecha }
+const marcas = new Map(), solicitudes = new Map(), generados = new Map();
+const guardando = new Set();
+let db = null, dbEstado = "cargando";
+let tab = location.hash === "#resto" ? "r" : "a";
+let sel = 0, filtro = "todos", texto = "";
+
+const esc = s => String(s ?? "").replace(/[&<>"]/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
+const tono = r => r === "Postular" ? "go" : r === "Evitar" ? "stop" : "care";
+const rango = p => typeof p === "number" ? p : String(p ?? "·").slice(0, 1);
+const grupo = p => { const g = String(p ?? "").slice(0, 1); return ["B", "C", "D"].includes(g) ? g : "otros"; };
+
+function estadoHtml() {
+  if (dbEstado === "cargando") return `<div class="status">Conectando con tus marcas…</div>`;
+  if (dbEstado === "sin-db") return `<div class="status warn">No se pudo conectar el registro de marcas en esta vista. Marca <b>Y</b> en la columna <b>postular</b> de vacantes.xlsx o díselo a Claude en el chat.</div>`;
+  const p = A.filter(d => marcas.get(d.id) === true && !generados.has(d.id)).length;
+  const g = A.filter(d => generados.has(d.id)).length;
+  const s = R.filter(d => solicitudes.get(d.id) === true).length;
+  return `<div class="status"><b>${p}</b> postulada${p === 1 ? "" : "s"} sin CV · <b>${g}</b> con CV generado · <b>${s}</b> pedida${s === 1 ? "" : "s"} para analizar.
+    <span class="note">Dile a Claude "revisa a qué puestos voy a postular" o "analiza las que marqué".</span></div>`;
+}
+
+function casilla(d, ctx) {
+  const g = generados.get(d.id);
+  if (g) return `<label class="mark done" title="CV generado y congelado"><input type="checkbox" checked disabled id="mk-${ctx}-${d.id}"><span>CV ${esc(g.cv_id || "")}</span></label>`;
+  const on = marcas.get(d.id) === true, off = dbEstado !== "ok" || guardando.has(d.id);
+  return `<label class="mark ${on ? "on" : ""} ${off ? "off" : ""}" for="mk-${ctx}-${d.id}">
+    <input type="checkbox" id="mk-${ctx}-${d.id}" data-col="marcas" data-campo="postular" data-id="${d.id}" ${on ? "checked" : ""} ${off ? "disabled" : ""}><span>Postulé</span></label>`;
+}
+
+function score(lbl, v) {
+  const ok = typeof v === "number";
+  return `<div class="score"><span class="lbl">${lbl}</span><span class="val">${ok ? v + "/10" : "Sin calificar"}</span>
+    <span class="bar"><span style="width:${ok ? v * 10 : 0}%"></span></span></div>`;
+}
+
+function renderAnalizadas() {
+  const nav = document.getElementById("list"), file = document.getElementById("file");
+  if (!A.length) { nav.innerHTML = ""; file.innerHTML = `<div class="empty">No hay vacantes analizadas en esta revisión.</div>`; return; }
+  sel = Math.min(sel, A.length - 1);
+  const d = A[sel], g = generados.get(d.id);
+  const scrollLista = nav.scrollTop, scrollFicha = file.scrollTop, mismaFicha = file.dataset.id === d.id;
+  nav.innerHTML = A.map((x, i) => `
+    <div class="row">
+      <button class="item" type="button" data-i="${i}" aria-current="${i === sel}">
+        <span class="rank">${esc(rango(x.podio))}</span>
+        <span style="min-width:0"><span class="it-title">${esc(x.titulo)}</span><br><span class="it-co">${esc(x.empresa)}</span><br>
+          <span class="pill ${tono(x.recomendacion)}" style="margin-top:4px">${esc(x.recomendacion)}</span></span>
+        <span class="it-score">${x.puntaje_global ?? "—"}<small>/10</small></span>
+      </button>${casilla(x, "l")}
+    </div>`).join("");
+  file.innerHTML = `
+    <div>
+      <div class="eyebrow">${typeof d.podio === "number" ? "Podio #" + d.podio : esc(d.podio || "")} · ${esc(d.fuente)} · publicada el ${esc(d.fecha)}${d.encaje_rapido != null ? " · encaje rápido " + d.encaje_rapido + "/100" : ""}</div>
+      <h2>${esc(d.titulo)}</h2>
+      <div class="co">${esc(d.empresa)}</div>
+      <div class="meta">
+        <span class="chip">${esc(d.ubicacion || "Ubicación no indicada")}</span><span class="chip">${esc(d.modalidad || "Modalidad no indicada")}</span>
+        <span class="chip">Traslado: ${esc(d.traslado || "—")}</span><span class="chip">Sueldo: ${esc(d.sueldo_esperado || "—")}</span>
+      </div>
+    </div>
+    <section class="verdict" aria-label="Veredicto final">
+      <div class="big">${d.puntaje_global ?? "—"}<small>/10</small></div>
+      <div><span class="pill ${tono(d.recomendacion)}">${esc(d.recomendacion)}</span><p>${esc(d.veredicto)}</p></div>
+    </section>
+    <div class="scores">${score("Empresa", d.nota_empresa)}${score("Puesto", d.nota_puesto)}${score("Encaje", d.nota_encaje)}</div>
+    <section class="sec"><h3>1. La empresa <span class="n">${d.nota_empresa ?? "—"}/10</span></h3><p>${esc(d.analisis_empresa)}</p></section>
+    <section class="sec"><h3>2. El puesto <span class="n">${d.nota_puesto ?? "—"}/10</span></h3><p>${esc(d.analisis_puesto)}</p></section>
+    <section class="sec"><h3>3. Encaje con tu perfil <span class="n">${d.nota_encaje ?? "—"}/10</span></h3><p>${esc(d.analisis_encaje)}</p>
+      <div class="bullets">Bullets sugeridos: ${esc(d.bullets_sugeridos)}</div></section>
+    <section class="sec"><h3>4. Sueldo esperado</h3><div class="salary">${esc(d.sueldo_esperado)}</div><p>${esc(d.analisis_sueldo)}</p></section>
+    <section class="sec"><h3>Fuentes consultadas</h3>
+      <ul class="sources">${(d.fuentes || []).map(([t, u]) => `<li><a href="${esc(u)}" target="_blank" rel="noopener">${esc(t)}</a></li>`).join("")}</ul></section>
+    <div class="actions">
+      ${d.link ? `<a class="btn primary" href="${esc(d.link)}" target="_blank" rel="noopener">Ver aviso</a>` : ""}
+      ${g ? `<span class="badge-done">CV generado y congelado · ${esc(g.cv_id)}</span>` : casilla(d, "f")}
+      <span class="note">ID ${esc(d.id)}</span>
+    </div>
+    <details><summary>Texto completo de la vacante</summary><p class="raw">${esc(d.detalle)}</p></details>`;
+  file.dataset.id = d.id;
+  nav.scrollTop = scrollLista;
+  file.scrollTop = mismaFicha ? scrollFicha : 0;
+}
+
+function renderResto() {
+  const grupos = [["todos", "Todas"], ["B", "B · medio"], ["C", "C · bajo"], ["D", "D · descartar"], ["otros", "Otras"]];
+  document.getElementById("filtros").innerHTML = grupos.map(([k, l]) =>
+    `<button class="filter" type="button" data-filtro="${k}" aria-pressed="${filtro === k}">${l}</button>`).join("");
+  const q = texto.toLowerCase();
+  const lista = R.filter(d => (filtro === "todos" || grupo(d.podio) === filtro) &&
+    (!q || [d.titulo, d.empresa, d.ubicacion].join(" ").toLowerCase().includes(q)));
+  const cont = document.getElementById("resto");
+  if (!lista.length) { cont.innerHTML = `<div class="empty">${R.length ? "Ninguna vacante coincide con el filtro." : "No quedan vacantes sin analizar."}</div>`; return; }
+  cont.innerHTML = lista.map(d => {
+    const on = solicitudes.get(d.id) === true, off = dbEstado !== "ok" || guardando.has(d.id);
+    return `<article class="card ${on ? "pedida" : ""}">
+      <div class="card-head">
+        <span class="grp">${esc(d.podio || "Sin grupo")}</span>
+        <div style="min-width:0"><h4>${esc(d.titulo)}</h4>
+          <div class="co">${esc(d.empresa)} · ${esc(d.ubicacion || "—")} · ${esc(d.modalidad || "—")} · ${esc(d.fecha)} · ${esc(d.fuente)}</div></div>
+        <div class="enc">${d.encaje_rapido ?? "—"}<small>encaje</small></div>
+      </div>
+      <dl class="facts">
+        ${d.cubre ? `<div><dt>Cubres</dt><dd>${esc(d.cubre)}</dd></div>` : ""}
+        ${d.falta ? `<div><dt>Falta</dt><dd>${esc(d.falta)}</dd></div>` : ""}
+        ${d.alertas ? `<div><dt>Alertas</dt><dd>${esc(d.alertas)}</dd></div>` : ""}
+      </dl>
+      <div class="card-actions">
+        ${d.link ? `<a class="btn" href="${esc(d.link)}" target="_blank" rel="noopener">Ver aviso</a>` : ""}
+        <label class="ask ${on ? "on" : ""} ${off ? "off" : ""}" for="sq-${d.id}">
+          <input type="checkbox" id="sq-${d.id}" data-col="solicitudes" data-campo="analizar" data-id="${d.id}" ${on ? "checked" : ""} ${off ? "disabled" : ""}>
+          ${on ? "Pedida para analizar" : "Analizar"}</label>
+      </div>
+      <details><summary>Texto de la vacante</summary><p class="raw">${esc(d.detalle)}</p></details>
+    </article>`;
+  }).join("");
+}
+
+function render() {
+  document.getElementById("estado").innerHTML = estadoHtml();
+  document.getElementById("count-a").textContent = A.length;
+  document.getElementById("count-r").textContent = R.length;
+  document.getElementById("tab-a").setAttribute("aria-selected", tab === "a");
+  document.getElementById("tab-r").setAttribute("aria-selected", tab === "r");
+  document.getElementById("panel-a").hidden = tab !== "a";
+  document.getElementById("panel-r").hidden = tab !== "r";
+  if (tab === "a") renderAnalizadas(); else renderResto();
+}
+
+document.addEventListener("click", e => {
+  const t = e.target.closest(".tab");
+  if (t) { tab = t.id === "tab-r" ? "r" : "a"; render(); return; }
+  const f = e.target.closest("[data-filtro]");
+  if (f) { filtro = f.dataset.filtro; render(); return; }
+  const b = e.target.closest(".item");
+  if (b) {
+    sel = +b.dataset.i; render();
+    if (window.matchMedia("(max-width: 820px)").matches) document.getElementById("file").scrollIntoView({ behavior: "smooth", block: "start" });
+  }
+});
+
+document.addEventListener("input", e => { if (e.target.id === "buscar") { texto = e.target.value; renderResto(); } });
+
+document.addEventListener("change", async e => {
+  const cb = e.target.closest("input[data-col]");
+  if (!cb || !db) return;
+  const { col, campo, id } = cb.dataset, valor = cb.checked;
+  const mapa = col === "marcas" ? marcas : solicitudes;
+  guardando.add(id); mapa.set(id, valor); render();
+  try {
+    await db.doc(col + "/" + id).set({ [campo]: valor, actualizado: new Date().toISOString() });
+  } catch (err) {
+    mapa.set(id, !valor);
+    if (err && err.code === "invalid_argument") dbEstado = "sin-db";
+  } finally { guardando.delete(id); render(); }
+});
+
+render();
+
+(async () => {
+  try { db = await window.claude?.use?.("db"); } catch (e) { db = null; }
+  if (!db) { dbEstado = "sin-db"; render(); return; }
+  dbEstado = "ok"; render();
+  const sync = (col, mapa, campo) => db.collection(col).onSnapshot(snap => {
+    snap.docs.forEach(doc => { if (!guardando.has(doc.id)) mapa.set(doc.id, doc.data()?.[campo] === true); });
+    render();
+  }, () => { dbEstado = "sin-db"; render(); });
+  sync("marcas", marcas, "postular");
+  sync("solicitudes", solicitudes, "analizar");
+  db.collection("generados").onSnapshot(snap => {
+    generados.clear(); snap.docs.forEach(doc => generados.set(doc.id, doc.data() || {})); render();
+  }, () => {});
+})();
+</script>

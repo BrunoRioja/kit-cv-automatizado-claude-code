@@ -1,0 +1,18 @@
+# Tus datos personales: nunca a un repo público
+/cv_data.xlsx
+/experiencia_maestra.md
+/vacantes.xlsx
+/postulaciones/
+/salida/
+/enviados/
+/radar/radar_vacantes.html
+~$*.xlsx
+~$*.docx
+
+# Configuración local de Claude Code
+.claude/settings.local.json
+
+# Python
+__pycache__/
+*.pyc
+.venv/
